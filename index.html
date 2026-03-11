@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina Finanças v3.0</title>
+    <!-- Fontes do Google: Inter para um visual moderno e limpo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Ícones Phosphor -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js para gráficos dinâmicos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Background Blur Orbs -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    
+    <div class="app-container glass-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="ph ph-sparkle branded"></i>
+                <span>Lumina</span>
+            </div>
+            <nav class="main-nav">
+                <a href="#" class="nav-item active">
+                    <i class="ph ph-squares-four"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-wallet"></i>
+                    <span>Ganhos</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-receipt"></i>
+                    <span>Despesas</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-hand-coins"></i>
+                    <span>Dívidas</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="ph ph-gear"></button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h1>Olá, Usuário</h1>
+                    <p class="subtitle">Bem-vindo ao seu controle financeiro</p>
+                </div>
+                <div class="header-actions">
+                    <div class="currency-selector">
+                        <select id="currency-select" class="currency-dropdown">
+                            <option value="BRL" selected>BRL (R$)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=Usuario+Silva&background=6366f1&color=fff" alt="User Avatar" class="avatar">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Alertas Universais -->
+            <div id="alerts-container"></div>
+
+            <!-- Resumo (Hero Cards) -->
+            <section class="summary-cards">
+                <div class="card income-card">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span>Renda Total (Entradas)</span>
+                            <div class="tooltip-container">
+                                <i class="ph ph-info"></i>
+                                <span class="tooltip-text">Tudo que pingou na sua conta neste mês.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-value" id="total-income">R$ 0,00</div>
+                </div>
+
+                <div class="card debt-card">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span>Todas as Despesas (Saídas)</span>
+                            <div class="tooltip-container">
+                                <i class="ph ph-info"></i>
+                                <span class="tooltip-text tooltip-text-left">A soma absoluta de TUDO que vai sair do seu bolso neste mês: Gastos Variáveis + Contas Fixas + Parcelamentos.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-value" id="total-out" style="color: var(--danger);">R$ 0,00</div>
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span id="sub-fixed">Fixas: R$ 0</span>
+                        <span id="sub-variable">Variáveis: R$ 0</span>
+                        <span id="sub-debts">Parcelas: R$ 0</span>
+                    </div>
+                </div>
+
+                <div class="card balance-card">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span>Saldo Livre (Seu Fôlego)</span>
+                            <div class="tooltip-container">
+                                <i class="ph ph-info"></i>
+                                <span class="tooltip-text tooltip-text-left">O que sobra exato da sua Renda após abater TODAS as Saídas (Fixas, Variáveis e Parceladas).</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-value" id="total-balance">R$ 0,00</div>
+                    <div class="card-indicator" id="balance-indicator">
+                        <i class="ph ph-trend-up"></i>
+                        <span>Analisando...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção Principal de Conteúdo -->
+            <div class="dashboard-grid">
+                
+                <!-- Coluna Esquerda: ENTRADAS -->
+                <div class="grid-col-left" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <div class="panel" style="border-top: 4px solid var(--success);">
+                        <div class="panel-header" style="align-items: flex-start; flex-direction: column; gap: 1rem;">
+                            <div class="header-title-group">
+                                <h2>Rendas do Mês</h2>
+                                <div class="tooltip-container">
+                                    <i class="ph ph-info"></i>
+                                    <span class="tooltip-text">Cadastre aqui tudo que entrou de dinheiro (salário, vendas, pix recebido).</span>
+                                </div>
+                            </div>
+                            <button class="btn-success w-100" onclick="openModal('transactionModal', 'income')" style="margin-top: 0;">
+                                <i class="ph ph-plus"></i> Novo Ganho
+                            </button>
+                        </div>
+                        <div class="list-container" id="incomes-list">
+                            <div class="empty-state">
+                                <i class="ph ph-wallet empty-icon"></i>
+                                <p>Nenhum ganho registrado.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Saúde Financeira Centralizada Abaixo das Rendas -->
+                    <div class="panel">
+                        <div class="panel-header" style="justify-content: center; margin-bottom: 0.5rem; text-align: center;">
+                            <h2 style="display: flex; align-items: center; gap: 0.5rem;"><i class="ph ph-heartbeat" style="color: var(--primary);"></i> Termômetro de Saúde</h2>
+                        </div>
+                        
+                        <div id="health-panel-container" class="health-content">
+                            <!-- Main Score -->
+                            <div class="health-main-score">
+                                <span id="health-percentage">0%</span>
+                                <span class="health-label">de fôlego livre</span>
+                            </div>
+                            
+                            <!-- Sleek Progress Bar -->
+                            <div class="health-bar-container">
+                                <div class="health-bar-fill" id="health-bar-fill" style="width: 0%;"></div>
+                            </div>
+                    
+                            <!-- The Insight -->
+                            <div class="health-insight" id="health-insight-card">
+                                <i class="ph ph-info" id="health-insight-icon"></i>
+                                <p id="health-status-msg" style="margin: 0;">Registre suas finanças para ativar a IA do termômetro.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: SAÍDAS -->
+                <div class="grid-col-right" style="display: flex; flex-direction: column; gap: 1.5rem; background: var(--bg-sidebar); border-radius: var(--radius-lg); padding: 1.5rem;">
+                    
+                    <h2 style="color: white; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Para onde vai seu dinheiro</h2>
+
+                    <!-- 1. Variáveis -->
+                    <div class="panel" style="margin-bottom: 0;">
+                        <div class="panel-header" style="align-items: flex-start; flex-direction: column; gap: 1rem;">
+                            <div class="header-title-group">
+                                <h2>Gastos Variáveis</h2>
+                                <div class="tooltip-container">
+                                    <i class="ph ph-info"></i>
+                                    <span class="tooltip-text tooltip-text-left">Despesas do dia a dia (Mercado, Comida, Uber). O que você MAIS pode cortar.</span>
+                                </div>
+                            </div>
+                            <button class="btn-danger w-100" onclick="openModal('transactionModal', 'expense')" style="margin-top: 0;">
+                                <i class="ph ph-minus"></i> Novo Gasto Variável
+                            </button>
+                        </div>
+                        <div class="list-container" id="expenses-list">
+                            <div class="empty-state">
+                                <i class="ph ph-receipt empty-icon"></i>
+                                <p>Nenhum gasto registrado.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Fixas -->
+                    <div class="panel" style="margin-bottom: 0;">
+                        <div class="panel-header">
+                            <div class="header-title-group">
+                                <h2>Contas Fixas</h2>
+                                <div class="tooltip-container">
+                                    <i class="ph ph-info"></i>
+                                    <span class="tooltip-text tooltip-text-left">Obrigatórias todo mês (Luz, Internet, Aluguel). Custos difíceis de baixar rapidamente.</span>
+                                </div>
+                            </div>
+                            <button class="btn-secondary" onclick="openModal('fixedModal')" style="padding: 0.5rem;">
+                                <i class="ph ph-plus"></i>
+                            </button>
+                        </div>
+                        <div class="list-container" id="fixeds-list">
+                        </div>
+                    </div>
+
+                    <!-- 3. Parcelamentos -->
+                    <div class="panel" style="margin-bottom: 0;">
+                        <div class="panel-header">
+                            <div class="header-title-group">
+                                <h2>Parcelamentos</h2>
+                                <div class="tooltip-container">
+                                    <i class="ph ph-info"></i>
+                                    <span class="tooltip-text tooltip-text-left">Dívidas ativas que bloqueiam seu Fôlego futuro (Cartão parcelado, Carro, Cadeira Inácio).</span>
+                                </div>
+                            </div>
+                            <button class="btn-secondary" onclick="openModal('debtModal')" style="padding: 0.5rem;">
+                                <i class="ph ph-plus"></i>
+                            </button>
+                        </div>
+                        <div class="list-container" id="debts-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modais -->
+    <!-- Modal Transação -->
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Nova Movimentação</h3>
+                <button class="close-modal" onclick="closeModal('transactionModal')"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="formTransaction">
+                <input type="hidden" id="transType" value="expense">
+                
+                <div class="form-group">
+                    <label>Categoria principal</label>
+                    <select id="transCategory" class="form-select" required>
+                        <!-- Injetado via JS dependendo se é Ganho ou Despesa -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição ou Nome (Opcional)</label>
+                    <input type="text" id="transDesc" placeholder="Ex: Mercado Atacadão, Uber, etc...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="transAmount" step="0.01" required placeholder="0.00">
+                </div>
+                
+                <button type="submit" class="btn-primary w-100" id="btnSaveTransaction">Salvar Movimentação</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Dívidas -->
+    <div class="modal-overlay" id="debtModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Nova Dívida (Parcelamento)</h3>
+                <button class="close-modal" onclick="closeModal('debtModal')"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="formDebt">
+                <div class="form-group">
+                    <label>Descrição da Dívida</label>
+                    <input type="text" id="debtDesc" required placeholder="Ex: Cartão de Crédito, Financiamento...">
+                </div>
+                <div class="form-group">
+                    <label>Valor Total da Dívida (R$)</label>
+                    <input type="number" id="debtTotal" step="0.01" required placeholder="0.00">
+                </div>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>Qtd. Parcelas</label>
+                        <input type="number" id="debtMonths" required placeholder="Ex: 12">
+                    </div>
+                    <div>
+                        <label>Já Pagas</label>
+                        <input type="number" id="debtPaid" required placeholder="Ex: 3" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Valor da Parcela Mensal (R$)</label>
+                    <input type="number" id="debtInstallment" step="0.01" required placeholder="0.00">
+                </div>
+                <button type="submit" class="btn-primary w-100">Salvar Parcelamento</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Conta Fixa -->
+    <div class="modal-overlay" id="fixedModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Adicionar Conta Fixa</h3>
+                <button class="close-modal" onclick="closeModal('fixedModal')"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="formFixed">
+                <div class="form-group">
+                    <label>Título da Conta</label>
+                    <input type="text" id="fixedDesc" required placeholder="Ex: Aluguel, Conta de Luz...">
+                </div>
+                <div class="form-group">
+                    <label>Valor Mensal (R$)</label>
+                    <input type="number" id="fixedAmount" step="0.01" required placeholder="0.00">
+                </div>
+                <button type="submit" class="btn-primary w-100">Salvar Conta Fixa</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
